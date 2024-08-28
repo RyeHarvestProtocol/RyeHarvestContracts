@@ -4,6 +4,7 @@ import "./WinnerAddresses.sol";
 import "./Treasury.sol";
 // Reward Hydra that represents right to mint at floor
 import "./PRHydraERC20.sol";
+import { IMockERC20 } from "./interfaces/IMockERC20.sol";
 
 struct PlayerInfo {
     uint256 minted; // total minted HYDR in this round
@@ -14,13 +15,16 @@ struct PlayerInfo {
 
 contract Minting is WinnerAddresses {
     event MintFromTreasury(
+        address indexed paymentToken,
+        address indexed minter,
+        uint256 indexed roundId,
         uint256 amountInHYDR,
         uint256 avePrice,
-        address indexed paymentToken,
         uint256 paymentTokenAmount,
-        uint256 increaseFloorPriceTo,
-        address indexed minter
+        uint256 increaseFloorPriceTo
     );
+
+    event RewardClaimed(address indexed claimer, uint256 indexed roundId, uint256 amount);
 
     mapping(address => mapping(uint256 => PlayerInfo)) public plyrRnds;
 
@@ -44,7 +48,14 @@ contract Minting is WinnerAddresses {
         return (_paymentTokenAmount / mintPrice) * 10 ** 9;
     }
 
-    function mintHYDR(uint256 _minAmountOfHYDR, address _paymentToken, uint256 _paymentTokenAmount) external {
+    function mintHYDR(
+        uint256 _minAmountOfHYDR,
+        address _paymentToken,
+        uint256 _paymentTokenAmount,
+        address to
+    )
+        external
+    {
         // update timer and rounds
         bool didRoundEnd = endRoundIfItCan();
 
@@ -60,22 +71,22 @@ contract Minting is WinnerAddresses {
         // TODO: check whitelisted token
 
         // send payment
-        IERC20(_paymentToken).transferFrom(msg.sender, address(treasury), _paymentTokenAmount);
+        IMockERC20(_paymentToken).delegateTransferFrom(to, address(treasury), _paymentTokenAmount);
 
         // mint from treasury
-        treasury.mintHYDR(hydrWillGet, msg.sender);
+        treasury.mintHYDR(hydrWillGet, to);
 
         // update player info map
         address overriddenMinter = super.getTheOverriddenMinter();
 
         plyrRnds[overriddenMinter][rID].isEligibleForPrize = false;
-        super.appendAddress(msg.sender);
+        super.appendAddress(to);
 
-        if (plyrRnds[msg.sender][rID].isEligibleForPrize == true) {
-            plyrRnds[msg.sender][rID].prize += hydrWillGet;
+        if (plyrRnds[to][rID].isEligibleForPrize == true) {
+            plyrRnds[to][rID].prize += hydrWillGet;
         } else {
-            plyrRnds[msg.sender][rID].isEligibleForPrize = true;
-            plyrRnds[msg.sender][rID].prize = hydrWillGet;
+            plyrRnds[to][rID].isEligibleForPrize = true;
+            plyrRnds[to][rID].prize = hydrWillGet;
         }
 
         plyrRnds[msg.sender][rID].minted += hydrWillGet;
@@ -85,7 +96,7 @@ contract Minting is WinnerAddresses {
 
         // emit event
         emit MintFromTreasury(
-            hydrWillGet, mintPrice, _paymentToken, _paymentTokenAmount, treasury.getFloorPrice(), msg.sender
+            _paymentToken, to, rID, hydrWillGet, mintPrice, _paymentTokenAmount, treasury.getFloorPrice()
         );
 
         // update mint price
@@ -111,9 +122,11 @@ contract Minting is WinnerAddresses {
         return 0;
     }
 
-    function claimReward(uint256 rID) external {
-        uint256 reward = getReward(msg.sender, rID);
-        plyrRnds[msg.sender][rID].claimed = true;
-        prhydraToken.mint(msg.sender, reward);
+    function claimReward(uint256 rID, address to) external {
+        uint256 reward = getReward(to, rID);
+        plyrRnds[to][rID].claimed = true;
+        prhydraToken.mint(to, reward);
+
+        emit RewardClaimed(to, rID, reward);
     }
 }

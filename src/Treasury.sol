@@ -2,6 +2,8 @@ pragma solidity ^0.8.20;
 
 import "./HydraERC20.sol";
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 contract HydraTreasury {
     /* ========== EVENTS ========== */
 

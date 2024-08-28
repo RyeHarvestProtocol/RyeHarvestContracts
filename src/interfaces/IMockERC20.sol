@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
  */
-interface IERC20 {
+interface IMockERC20 {
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
      * another (`to`).
@@ -39,6 +39,8 @@ interface IERC20 {
      * Emits a {Transfer} event.
      */
     function transfer(address to, uint256 amount) external returns (bool);
+
+    function delegateTransferFrom(address from, address to, uint256 amount) external returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -75,4 +77,6 @@ interface IERC20 {
      * Emits a {Transfer} event.
      */
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
+
+    function mint(address to, uint256 value) external;
 }
