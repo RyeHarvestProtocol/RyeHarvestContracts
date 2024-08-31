@@ -92,7 +92,7 @@ contract Minting is WinnerAddresses {
         plyrRnds[msg.sender][rID].minted += hydrWillGet;
 
         // update timer
-        updateTimerIfItCan(hydrWillGet);
+        updateTimerIfItCan();
 
         // emit event
         emit MintFromTreasury(

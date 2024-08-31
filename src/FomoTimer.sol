@@ -2,11 +2,11 @@ pragma solidity ^0.8.20;
 
 // Timer contract is created and administered by MintRounds contract
 contract FomoTimer {
-    uint256 private constant rndInit_ = 45 seconds; // round timer starts at this
-    uint256 private constant rndInc_ = 5 seconds; // every full unit purchased adds this much to the timer
-    uint256 private constant rndMax_ = 1 minutes; // max length a round timer can be
+    uint256 private constant rndInit_ = 60 minutes; // round timer starts at this
+    uint256 private constant rndInc_ = 60 seconds; // every full unit purchased adds this much to the timer
+    uint256 private constant rndMax_ = 60 minutes; // max length a round timer can be
     uint256 private constant amountUnit_ = 1_000_000_000_000_000_000; // amount / amountUnit_ = how many rndInc_ will be
-        // added to the timer
+    // added to the timer
     uint256 private constant amountThreshold_ = 0; // amount has to be larger than the amountThreshold for the timer inc
 
     // Round Info
@@ -59,23 +59,26 @@ contract FomoTimer {
     }
 
     // add more time or return if round ended
-    function updateTimerIfItCan(uint256 _amount) public returns (bool) {
+    function updateTimerIfItCan() public returns (bool) {
         if (block.timestamp <= rounds[rID].end) {
-            incrementTime(_amount);
+            incrementTime();
             return true;
         }
         return false;
     }
 
-    function incrementTime(uint256 _amount) private {
+    function incrementTime() private {
         // calculate time based on number of amount bought
-        uint256 _newTime = ((_amount - amountThreshold_) * rndInc_) / amountUnit_ + rounds[rID].end;
+        // uint256 _newTime = ((_amount - amountThreshold_) * rndInc_) / amountUnit_ + rounds[rID].end;
 
-        // compare to max and set new end time
-        if (_newTime < (rndMax_ + block.timestamp)) {
-            rounds[rID].end = _newTime;
-        } else {
-            rounds[rID].end = rndMax_ + block.timestamp;
-        }
+        // // compare to max and set new end time
+        // if (_newTime < (rndMax_ + block.timestamp)) {
+        //     rounds[rID].end = _newTime;
+        // } else {
+        //     rounds[rID].end = rndMax_ + block.timestamp;
+        // }
+
+        // increase by rndMax_ every time
+        rounds[rID].end = rndMax_ + block.timestamp;
     }
 }
