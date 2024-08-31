@@ -23,6 +23,13 @@ contract Deploy is Deployer {
     address public deployer = address(0xd7c8ab7ED67F2986517635B615B0A526D8dda06f);
     address public user1 = address(0x678e0E67555E8fC4533c1a9f204e2C1C7C1C9665);
 
+    address public daiAddress = address(0x84406431b1b6E88AeC052163058fBf668Eb56283);
+    address public hydrMintingAddress = address(0x5410687551AB4c8F080632138689E5d3cB2797c1);
+    address public hydrTreasuryAddress = address(0xE3C6aE7A9c1d3991154a8a1e158c63f71b0256Ba);
+    address public hydrAddress = address(0x9511e3ffe4C49689CCD24442b6375162f9DCAa0f);
+    address public prhydrAddress = address(0x17bF58976Ebc22B05b3Cc88C0747956624321C4E);
+    address public usdcAddress = address(0x44C785F14844A0C6002Dbe0f0716Fab55367C6Da);
+
     function name() public pure override returns (string memory name_) {
         name_ = "Deploy";
     }
@@ -33,15 +40,25 @@ contract Deploy is Deployer {
     }
 
     function run() external {
-        deployHydraToken();
-        deployPRHydraERC20();
-        deployTreasury();
-        deployMockTokens();
-        whitelistMockTokens();
-        deployMinting();
+        // deployHydraToken();
+        // deployPRHydraERC20();
+        // deployTreasury();
+        // deployMockTokens();
+        // whitelistMockTokens();
+        // deployMinting();
+        deployAt();
         mintHydra();
 
         console2.log("Deployment completed!");
+    }
+
+    function deployAt() public {
+        dai = MockERC20(daiAddress);
+        hydr = HydraERC20(hydrAddress);
+        prhydr = PRHydraERC20(prhydrAddress);
+        treasury = HydraTreasury(hydrTreasuryAddress);
+        minting = Minting(hydrMintingAddress);
+        usdc = MockERC20(usdcAddress);
     }
 
     function deployHydraToken() public broadcast returns (address) {
@@ -94,9 +111,9 @@ contract Deploy is Deployer {
 
     function mintHydra() public broadcast returns (address) {
         // mint dai to user1
-        dai.mint(user1, 10 ether);
+        dai.mint(user1, 1_000_000_000 ether);
 
-        minting.mintHYDR(1, address(dai), 1 ether, user1);
+        minting.mintHYDR(1, address(dai), 6000 ether, user1);
         console2.log("successfully minted hydr");
     }
 }
